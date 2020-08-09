@@ -1,0 +1,740 @@
+chef
+----
+what is chef?
+	chef is a configuration management tool...
+what is configuration management tool?
+	it is maintain number(100 and 1000's) of machines with automation
+
+what it maintain ?
+	it maintain the system resources such as
+	1)install a application
+	2)configuration
+	3)updates
+	4)maintain and so on..
+
+why configuration management tool?
+	->reduce management complexity
+	->save time
+	
+configuration management tools?
+	puppet ----> 2005	pull
+	chef ------->2008	pull
+	ansible ----->2011	push
+
+infrastructure as code
+----------------------
+->chef ensures each node compiles with policy.
+->policy determined by the configurations in each node's runlist.
+->reduce management complexity through abstraction.
+->your policy states what state each resource should be in.	
+
+what is resource?
+	resource is a piece of system and it's desired state.
+
+
+file--->create,delete
+user--->crete,delete
+package-->install/not
+
+managing complexity
+-------------------
+1)organization
+2)environment
+3)roles
+4)nodes
+5)recipes
+6)cookbooks
+7)runlist
+
+1)organization
+	it is independent tenant.
+
+ 	eg:comapines,department.
+2)environment
+	environment reflect your patterns and workflow,and can be used
+to model the life stages of your apllications.
+	->development env
+	->testing env
+	->staging env
+	->production env
+3)roles
+	roels represents the type of servers in your infrastructure.
+	->lb server
+	->web server
+	->db server	
+
+4)nodes
+	nodes represents the servers in your infrastructure,it could
+be a physical server or virtual server.
+
+ 	could also be network hardwares ,switches,routes.etc...
+5)receipe
+
+	receipe is a collection of resources
+	file,app
+	
+6)cookbooks
+	collection of receipes and templates and cutom resouces..
+	
+
+7)runlist
+	runlist is a collection of cookbooks ,and every machine has it's
+own runlist.
+disadvantages
+-------------
+	->hard to learn
+advantages
+----------
+	->more scalability
+	->fully automation
+
+chef-architecture
+-----------------
+	3-tier architecture
+
+workstation --->chef-server<----nodes (chef-client)
+
+				webservers
+				dbservers
+				cache servers
+				email servers
+				monitoring servers
+
+
+pem-->private enhanced mail
+
+chef-server setup
+-----------------
+step1
+-----
+	pre-requisite:
+		1)vm(1gb ram,15 hdd,1 cpu,64 bit linux)
+		2)packages
+			a)chef-server-core (core)
+			b)chef-manage (gui)
+step 2
+------
+			
+	change hostname
+	centos6.x			centos7.x
+	/etc/sysconfig/network		/etc/hostname
+
+step 3
+------
+	update the hostfile	
+	/etc/hosts
+
+
+	ip hostname (fullqualified-domain-name)
+
+step 4
+-------
+	downlaod the above the packages
+
+step 5
+-------
+	install the above packages
+	rpm -ivh chef-server-core..
+	rpm -ivh chef-manage...
+
+	chef-server-ctl reconfigure
+	chef-manage-ctl reconfigure --accept-license
+
+step 6
+-------
+	stop firewall (or) open port 443
+	
+	got browser https://<chef-server-ip>
+step 7
+------
+	Q)how to create a user and organization?
+	
+	user
+	----
+	chef-server-ctl user-create <username> <firstname> <middle name>	
+ <lst name> "<user-email>" "<passwd>" -f <username.pem>
+
+pem-->private enhanced mail
+
+	chef-server-ctl org-create <org short name> "<org-full-name>"
+ -a <username> -f <orgshort-validator.pem>
+chef-workstation
+--------------------
+steps to install and configure chef-workstation
+step1
+------
+	get the new VM(1gb RAM, 1CPU,10GB HDD)
+step 2
+-------
+	download and install chefdk(workstation)
+step 3
+-------
+	set up appropriate hostname
+	chef-workstation.technicaladda.com
+step 4
+-------
+	update /etc/hosts file	
+	<server ip> <serverhostname>
+	<workstation ip> <workstation hostname>
+step 5
+-------
+	create a user for system with root privilagies
+	login to that user
+	create project directory
+	mkdir <techadda>
+	cd techadda	
+step 6
+------
+	create a structure and configure "knife.rb" file	
+	mkdir .chef
+	cd .chef
+	knife configure
+step 7
+------
+	knife ssl fetch (fetch the ssl certificate from chefserver)
+	knife ssl check (check the connection)		
+step 8
+-------
+	knife user list
+	knife client list
+
+chef-workstation setup in windows (optional)
+--------------------------------------------
+
+chef server --> 1.5 G
+chef workstation ----> 1G 
+chef node ----> 1G approx
+
+
+linux ---> hostname , hosts 
+
+
+windows  --> C:\Windows\System32\drivers\etc\hosts
+
+chef-node setup using bootstrap method :
+---------------------------------------
+
+bootstrap process :
+------------------
+1)it will install chef-client in the node.
+2)it will collect the info about node and upload to the chef-server.
+3)it will register the node number under chef-server.
+4)it will run initial cookbooks (if any).
+
+pre-requisities :
+----------------
+1) install a new system (VM).
+2)create a user with sudo (root) access.
+3)setup the hostname correctly (/etc/hostname). (eg: chefnode.techadda.com)
+4)update the hosts (/etc/hosts) file with chef-server ip,workstation ip and node ip.
+  <server ip>        <serverhostname>
+  <workstation ip>   <workstation hostname>
+  <node ip>          <node hostname>
+
+NOTE : Date and Time must be the same in all the 3 machines. 
+----- 
+ now login into workstation and update hosts file with node ip
+ 
+  windows  --> C:\Windows\System32\drivers\etc\hosts
+  <node ip>   <node hostname>
+
+command for chef-node setup :
+----------------------------
+ (from workstation)
+   - knife bootstrap <nodeip> -x <username> -P <password> --sudo
+   
+    - knife bootstrap 192.168.43.38 -x chefadmin -P chefadmin --sudo
+cookbooks
+---------
+ Q)what is cookbook?
+          
+          cookbook is a collection of recipes. cookbook contain recipes,templates,files,custom resources,etc.
+
+1)create a cookbook
+2)write a recipe file.
+3)test a cook book.
+4)upload cookbook to server.
+5)update node run_list.
+6)execute chef-client on the node.
+ Q) what are the commands to create a cookbook?
+   
+     - knfe cookbook create <cookbook name>    [old version]
+               it will create full directory structure. it is not associated with git.
+               it will create cookbook in cookbooks directory.
+
+     - chef generate cookbook <cookbook name>  [new version]
+               it will create partial directory structure. it is associate with git.
+               it will create cookbook in current directory. so, you need to go to cookbooks directory. 
+       
+old version
+-----------
+attributes
+changelog.md
+definations
+files 
+ |_
+    default
+libraries
+metadata.rb
+README.md
+recipes
+ |_
+   default.rb
+resources
+templates
+|_default
+
+
+new version
+-----------
+Berksfile
+chefignore
+metadata.rb
+README.md
+recipes
+|___default.rb
+spec
+|___spec_helper.rb 
+|___unit
+       |__recipes
+                |__default.spec.rb
+test
+|_recipes
+    |_default-test.rb
+
+1)file_test
+-----------
+
+1)create a cookbook
+2)write a recipe file.
+3)test a cook book.
+4)upload cookbook to server.
+5)update node run_list.
+6)execute chef-client on the node.
+
+1)knife cookbook create file_test (or) chef generate cookbook file_test
+2)vi techadda/cookbooks/file_test/recipes/default.rb
+    
+   resource_type 'name' do
+     parameters
+     parameters
+     action
+   end
+ 
+
+3)knife cookbook test file_test (or) cookstyle test file_test
+4)knife cookbook upload file_test 
+  a)knife cookbook list
+5)knife node run_list add <node name> file_test
+6)execute "chef-client" in chef node
+
+
+file '/tmp/dummy.txt' do
+  owner 'root'
+  group 'root'
+  mode 0644
+  content 'this is a dummy file'
+  action :create
+end
+
+ohai process:
+-------------
+
+ - ohai | less
+
+
+2)cookbook for webserver (APACHE):
+  -------------------------------
+
+web:
+  1)install the package (httpd)
+  2)start the httpd service
+  3)enable httpd service 
+  4)create index.html page
+  5)check and confirm.
+
+cookbook steps:
+--------------
+1)create a cookbook.
+2)write a recipe file.
+3)test a cook book.
+4)upload cookbook to server.
+5)update node run_list.
+6)execute chef-client on the node.
+
+
+
+1)knife cookbook create web_server (or) chef generate cookbook web_server
+2)vi techadda/cookbooks/web_server/recipes/default.rb
+    
+   package 'httpd' do
+     action :install
+   end
+   service 'httpd' do
+     action [:start, :enable]
+   end
+   file '/var/www/html/index.html' do
+     owner 'root'
+     group 'root'
+     mode 0644
+     content '<h1>hello technical guys welcome</h1>'
+     action :create
+   end 
+
+3)knife cookbook test web_server (or) cookstyle test web_server
+4)knife cookbook upload web_server 
+  a)knife cookbook list
+5)knife node run_list add <node name> web_server
+6)execute "chef-client" in chef node
+
+3)cookbook for cronie:
+  --------------------
+ Q) what is cronjob?
+                we can schedule the activities in the machine.
+                    eg:backup script,commands,tasks.
+ crontab -e -->edit the cron schedule
+ crontab -l -->to see the current schedule
+ package : cronie
+ service : crond 
+ file : /var/spool/cron/<username>
+ There are six fields in this file
+ 
+ MIN 	HR	DOM	MONTH	DOW	<command>
+ (0-59) (0-23)  (1-31)  (1-12)  (0-7)    command
+ 30      01       *      *       *        /home/ramki/etcbackup.sh   (daily backup)
+ 00      02       *      *       1        /home/ramki/backup.sh      (weekly backup)
+ 00      03       01     *       *        /home/ramki/backup.sh      (monthly backup)
+(9,19,29,39,49,59) * *   *       *        /home/ramki/backup.sh       (every 9,19,29,39,49,59 min backup)
+*/10     *         *     *       *        /home/ramki/backup.sh       (every 10 min)
+
+cookbook steps:
+--------------
+1)create a cookbook.
+2)write a recipe file.
+3)test a cook book.
+4)upload cookbook to server.
+5)update node run_list.
+6)execute chef-client on the node.
+
+
+1)knife cookbook create cron_test (or) chef generate cookbook cron_test
+2)vi techadda/cookbooks/cron_test/recipes/default.rb
+    
+   package 'cronie' do
+     action :install
+   end
+   service 'crond' do
+     action [:start, :enable]
+   end
+   file '/var/spool/cron/root' do
+     owner 'root'
+     group 'root'
+     mode 0644
+     content '*/10 * * * * /bin/chef-client'
+     action :create
+   end 
+
+3)knife cookbook test cron_test (or) cookstyle test cron_test
+4)knife cookbook upload cron_test 
+  a)knife cookbook list
+5)knife node run_list add <node name> cron_test
+6)execute "chef-client" in chef node
+
+
+4)Chef Attributes:
+------------------
+
+chef attributes are variables,using this attributes we can find below info.
+   in short,it will help us to get the information about node and it's state.
+  eg:RAM,hostname,ipaddress,packages.
+
+  centos ,ubuntu
+
+two types of attributes are their
+i)user defined -->user will define it
+ii)system defined --> chef will define it
+
+Q)where you can define the attributes?
+  i)in the node it self.
+ ii)in the cookbook(attributes,recipe) 
+iii)in the role.
+ iV) in the environment.
+
+Q)what are different types of attributes?
+
+ i)default                  ->lowest precedence
+ ii)force_default
+iii)normal
+ iV)override
+ V)force_override
+ Vi)automatic               -> highest precedence
+
+use less defination in recipe file
+
+eg:package_name = "httpd"
+   service_name = "httpd"
+ 
+   package package_name do
+     action :install
+   end
+
+attributes in cookbook:
+----------------------
+
+ we can define attributes in attributes directory,and recipe directory
+			|				|
+		       \|/			       \|/
+   default["package_name"] = "cronie"		node["package_name"]
+
+
+1)create a cookbook.
+2)write a recipe file and attribute file.
+3)test a cook book.
+4)upload cookbook to server.
+5)update node run_list.
+6)execute chef-client on the node.
+
+
+
+
+1)knife cookbook create attribute_test (or) chef generate cookbook attribute_test
+ - mkdir techadda/cookbooks/attribute_test/attributes
+2) i) vi techadda/cookbooks/attribute_test/attributes/default.rb
+    
+    case node['platform']
+  
+      when "centos","rhel"
+     
+        default['pkg_name']="httpd"
+    
+        default["ser_name"] = "httpd"
+    
+        default["doc_root"] = "/var/www/html"
+  
+      when "ubuntu","debian"
+    
+        default["pkg_name"] = "apache2"
+    
+        default["ser_name"] = "apache2"
+    
+        default["doc_root"] = "/var/www/"
+
+     end
+
+2)vi techadda/cookbooks/attribute_test/recipes/default.rb
+    
+   package node['pkg_name'] do
+    action :install
+   end
+
+service node['ser_name'] do
+  action [:start, :enable]
+end
+
+file "#{node['doc_root']}/welcome.html" do
+  owner 'root'
+  group 'root'
+  mode '0644'
+  content 'hey guys'
+  action :create
+end
+
+3)knife cookbook test attribute_test (or) cookstyle test attribute_test
+4)knife cookbook upload attribute_test 
+  a)knife cookbook list
+5)knife node run_list add <node name> attribute_test
+6)execute "chef-client" in chef node
+
+5)Tempaltes:
+  ---------
+ Q)what is template?
+    template is a script with .erb extention
+    .erb --> embedded ruby
+    using this script we can create a static files.
+
+source		  destination
+----------------------------------
+index.html.erb ---->index.html
+httpd.conf.erb ---->httpd.conf
+
+
+1)create a cookbook.
+2)write a recipe file and template file.
+3)test a cook book.
+4)upload cookbook to server.
+5)update node run_list.
+6)execute chef-client on the node.
+
+
+1)knife cookbook create template_test (or) chef generate cookbook template_test
+ - mkdir techadda/cookbooks/template_test/templates/default/
+2) i) vi techadda/cookbooks/attribute_test/templates/default/index.html.erb
+    
+    <html>
+     <h1>welcome to technical adda my hostname is <%=node['hostname']%></h1>
+     <h2>my server platform is <%=node['platform']%></h2>
+     <h3>server has total memory <%=node['memory']['total']%> </h3> 
+2)vi techadda/cookbooks/template_test/recipes/default.rb
+    
+
+template "/var/www/html/info.html" do
+  owner 'root'
+  group 'root'
+  mode '0644'
+  source 'index.html.erb'
+  action :create
+end
+
+3)knife cookbook test template_test (or) cookstyle test template_test
+4)knife cookbook upload template_test 
+  a)knife cookbook list
+5)knife node run_list add <node name> template_test
+6)execute "chef-client" in chef node
+
+6)cookbook for creating user:
+ ----------------------------
+
+  Q)who is user?
+     who can utilize the system resources.
+
+Target: create a user in chefnode.
+------- 
+ information need to create a user
+ username: user01
+ password : <password>
+ groupname : <group name>
+ home : /home/<username>
+ shell : /bin/bash
+ 
+Q)what is my password structure?
+
+ password layers:
+ ----------------
+       $encrypt_type$salt_name$actual_pass
+          $encrypt_type = 6 types of sha1
+           md5=1
+           crc=2
+        sha256=5
+        sha512=6
+            $salt_name=$kgh556 (random unique number system generated)
+            $actual_pass=$8md5nvef985
+
+Q)how to generated a encrypted password?
+ 
+ - openssl passwd -<type> -salt <salt name> <actual_passwd>
+
+ - openssl passwd -1 -salt batman redhat
+
+1)create a cookbook.
+2)write a recipe file.
+3)test a cook book.
+4)upload cookbook to server.
+5)update node run_list.
+6)execute chef-client on the node.
+
+
+1)knife cookbook create user_test (or) chef generate cookbook user_test
+2)vi techadda/cookbooks/template_test/recipes/default.rb
+    
+group 'user01' do
+  action :create
+end
+user 'user01' do
+  password '$1$batman$nev555'
+  group 'user01'
+  shell '/bin/bash'
+  home '/home/user01'
+  manage_home true
+  action :create
+end
+
+3)knife cookbook test user_test (or) cookstyle test user_test
+4)knife cookbook upload user_test 
+  a)knife cookbook list
+5)knife node run_list add (node name) user_test (or) knife node edit (node name)
+6)execute "chef-client" in chef node
+
+6)databags:
+ ---------
+ databags are used to maintain the system sensitive information like passwords.
+
+Q)what are databags?
+ - databags are global variables.
+ - it stores the data in JSON format.
+ - it will always stored on the server.
+ - it stored in index format for faster searching.
+
+Q)why we need databags ?
+  - To store secret (or) sensitive information like password, private key.
+
+
+Q)what are the steps to handle databags?
+ a) create an empty databag.
+ b) write a json format file and put some data.
+ c) import the data from the file to databag.
+ d) see the list of current databags.
+ e) modify the recipe to collect data from databag.
+   - knife data bag list
+   - knife data bag create (data bag name)
+   - vi user02_password.json
+         { 
+           "id" : "user02",
+          "password" : "$1$batman$254niefb"
+         }
+   - knife data bag from file (data bag name) (file.json)
+
+cookbook steps:
+--------------
+1)create a cookbook.
+2)write a recipe file.
+3)test a cook book.
+4)upload cookbook to server.
+5)update node run_list.
+6)execute chef-client on the node.
+
+
+1)knife cookbook create user_test (or) chef generate cookbook user_test
+2)vi techadda/cookbooks/template_test/recipes/default.rb
+  
+userpass=data_bag_item('user02_passwd','user02')  
+group 'user02' do
+  action :create
+end
+user 'user02' do
+  password userpass['password']
+  group 'user02'
+  shell '/bin/bash'
+  home '/home/user02'
+  manage_home true
+  action :create
+end
+
+3)knife cookbook test user_test (or) cookstyle test user_test
+4)knife cookbook upload user_test 
+  a)knife cookbook list
+5)knife node run_list add (node name) user_test (or) knife node edit (node name)
+6)execute "chef-client" in chef node
+
+
+Roles in chef:
+-------------
+ Q)what is a role?
+   it is a type of server like db,web,application.
+   it is a coolection of cookbooks and attributes.
+
+commands to create a role
+
+ - knife role create webserver
+ - knife role edit webserver (place the cookbooks in role) 
+ - knife node edit chefnode.techadda.com (instead of cookbooks place the role role[role_name])
+ 
+  
+knife[:editor]="vim"
+
+apache,php,mysql (LAMP)
+
+supermarket in chef:
+-------------------
+ - knife supermarket --help
+ - knife supermarket download mysql 8.5.1
+ 
